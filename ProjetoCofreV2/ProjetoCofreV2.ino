@@ -2,37 +2,38 @@
  * @file ProjetoCofre.ino
  * @author Leonardo Pereira Côrtes (200030582)
  * @brief Projeto Transversal de Redes de Comunicação 1 - Universidade de Brasília
- * @version 2
- * @date 2022-12-27
+ * @version 3
+ * @date 2022-12-29
  * 
  * @copyright Copyright (c) 2022
  */
 
 #include "Arduino.h"
 #include <Servo.h> 
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 // Pinos dos dispositivos
-int buzzer = 2;
-int servo = 3;
-int botaoEnter = 4; 
+int servo = 2;
+int botaoEnter = 3;
+int botao4 = 4;
 int botao3 = 5;
 int botao2 = 6;
 int botao1 = 7;
+int buzzer = 13;
 
-const int RS = 13, EN = 12, D4 = 11, D5 = 10, D6 = 9, D7 = 8; // Pinos do LCD
-LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-Servo servo_motor;
+Servo servo_motor;  
 
-char senha[3] = "123"; // Senha padrão
-char textoDigitadoPeloUsuario[3]; // Variavel que armazena a senha digitada pelo usuário
+char senha[4] = "1234"; // Senha padrão
+char textoDigitadoPeloUsuario[4]; // Variavel que armazena a senha digitada pelo usuário
 
 // Variáveis auxiliares
 bool abrirCofre = false, alterarSenha = false;
-int pos=0; 
-int tentativas=0; 
-int a=0, p=0;
+int pos = 0; 
+int tentativas = 0; 
+int a = 0, p = 0;
 
 void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no LCD
   if(aux == 1){
@@ -46,6 +47,10 @@ void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no
   if(aux == 3){
   lcd.print('3');
   textoDigitadoPeloUsuario[a]='3';
+  }
+  if(aux == 4){
+  lcd.print('4');
+  textoDigitadoPeloUsuario[a]='4';
   }
   a++;
   delay(15);
@@ -63,6 +68,10 @@ void alteraSenha(int aux2) { // Função para alterar a senha
   if(aux2 == 3){
     lcd.print('3');
     senha[p]='3';
+  }
+  if(aux2 == 4){
+    lcd.print('4');
+    senha[p]='4';
   }
   p++;
   delay(15);
@@ -92,7 +101,7 @@ void senhaCorreta() { // Função para quando usuário acertar a senha
   lcd.print("Senha Correta");
   delay(1000);  
   
-  for (pos = 0; pos <= 90; pos += 1) { // Mover o servo em 90°
+  for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
     servo_motor.write(pos);              
     delay(15);                       
   }
@@ -119,7 +128,7 @@ void alarme() { // Função para emitir o alarme no buzzer
   lcd.setCursor(4,0);
   lcd.print("ALARME!!");
   for (int vezesQueAlarmeToca=0; vezesQueAlarmeToca<10; vezesQueAlarmeToca++) { // Toca 10 vezes
-    for (int freq = 500; freq<1000; freq++) {
+    for(int freq = 500; freq<1000; freq++) {
       tone(buzzer, freq);
       delayMicroseconds(600);
     }
@@ -128,7 +137,8 @@ void alarme() { // Função para emitir o alarme no buzzer
 }
 
 void setup() { // Setup inicial
-  lcd.begin (16,2);
+  lcd.init();
+  lcd.backlight();
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("1- Abrir o cofre");
@@ -139,6 +149,7 @@ void setup() { // Setup inicial
   pinMode(botao1, INPUT);
   pinMode(botao2, INPUT);
   pinMode(botao3, INPUT);
+  pinMode(botao4, INPUT);
   pinMode(botaoEnter, INPUT);
   
   // Inicializa o servo
@@ -147,7 +158,7 @@ void setup() { // Setup inicial
 }
  
 void loop() {
-  if (abrirCofre == false && alterarSenha == false) { // Tela inicial, espera a escolha do usuário
+  if(abrirCofre == false && alterarSenha == false) { // Tela inicial, espera a escolha do usuário
     if(digitalRead(botao1) == HIGH){ // Se apertar 1, entra na operação de abrir o cofre
       abrirCofre = true;
       while(digitalRead(botao1) == HIGH){}
@@ -160,24 +171,24 @@ void loop() {
     }
   }
 
-  if (alterarSenha == true) { // Operação para trocar de senha
-    if (a == 3){ 
+  if(alterarSenha == true) { // Operação para trocar de senha
+    if(a == 4){ 
       if(digitalRead(botaoEnter) == HIGH) { 
         lcd.clear(); 
         
-        for(int x=0; x<3; x++){
+        for(int x=0; x<4; x++){
           if(senha[x] != textoDigitadoPeloUsuario[x]){
-            x = 3;
+            x = 4;
             if(tentativas == 2) {
               alarme();
               telaInicial(); 
-              tentativas=0;
+              tentativas = 0;
             }
             else {
               senhaIncorreta();  
             }
           }
-          if (x == 2) {
+          if(x == 3) {
             a++;
             tentativas = 0;
             lcd.setCursor(0,0);
@@ -197,26 +208,31 @@ void loop() {
         }
       }
     }
-    else if (a < 3) {
+    else if(a < 4) {
       int aux = 0;
       if(digitalRead(botao1) == HIGH){
         aux = 1;
         escreveNoDisplay(aux);
-        while(digitalRead(botao1)==HIGH){}
+        while(digitalRead(botao1) == HIGH){}
       }
       if(digitalRead(botao2) == HIGH){
         aux = 2;
         escreveNoDisplay(aux);
-        while(digitalRead(botao2)==HIGH){}
+        while(digitalRead(botao2) == HIGH){}
       }
       if(digitalRead(botao3) == HIGH){
         aux = 3;
         escreveNoDisplay(aux);
-        while(digitalRead(botao3)==HIGH){}
+        while(digitalRead(botao3) == HIGH){}
+      }
+      if(digitalRead(botao4) == HIGH){
+        aux = 4;
+        escreveNoDisplay(aux);
+        while(digitalRead(botao4) == HIGH){}
       }
     }
-    else if (a > 3) {
-      if(p < 3){
+    else if(a > 4) {
+      if(p < 4){
         int aux2 = 0;
         if(digitalRead(botao1) == HIGH){
           aux2 = 1;
@@ -233,8 +249,13 @@ void loop() {
           alteraSenha(aux2);
           while(digitalRead(botao3) == HIGH){}
         }
+        if(digitalRead(botao4) == HIGH){
+          aux2 = 4;
+          alteraSenha(aux2);
+          while(digitalRead(botao4) == HIGH){}
+        }
       }
-      if (p == 3){ 
+      if(p == 4){ 
         if (digitalRead(botaoEnter) == HIGH) { 
           lcd.clear(); 
           lcd.setCursor(0,0);
@@ -248,49 +269,54 @@ void loop() {
     }      
   }
   
-  if (abrirCofre == true) { // Operação para abrir o cofre
-    if (a == 3){ 
-      if(digitalRead(botaoEnter) == HIGH) { 
+  if(abrirCofre == true) { // Operação para abrir o cofre
+    if(a == 4) { // Se usuário digitar os 4 caracters da senha
+      if(digitalRead(botaoEnter) == HIGH) { // Se apertar enter
         lcd.clear(); 
         
-        for (int x=0; x<3; x++){
-          if (senha[x]!=textoDigitadoPeloUsuario[x]){
-              x = 3;
-            if(tentativas == 2) {
+        for(int x=0; x<4; x++){ // Para cada digito
+          if(senha[x] != textoDigitadoPeloUsuario[x]){ // Compara o n° digitado pelo usuário com o caractere da senha
+              x = 4;
+            if(tentativas == 2) { // Se for o 3° erro ativa o alarme
               alarme();
               telaInicial(); 
               tentativas = 0;
             }
-            else {
+            else { // Se for 1° ou 2° erro conta +1 tentativa
               senhaIncorreta();  
             }
           }
-          if(x == 2) {
+          if(x == 4) { // Se a senha for correta
             senhaCorreta();
             tentativas = 0;
           }
         }
       }
     }
-    else if (a < 3) {
+    else if(a < 4) { // Se não tiver digitado os 4 digitos ainda faz a leitura do próximo digito
       int aux3 = 0;
-      if(digitalRead(botao1) == HIGH){
+      if(digitalRead(botao1) == HIGH){ // 1
         aux3 = 1;
         escreveNoDisplay(aux3);
-        while(digitalRead(botao1)==HIGH){}
+        while(digitalRead(botao1) == HIGH){}
       }
-      if(digitalRead(botao2) == HIGH){
+      if(digitalRead(botao2) == HIGH){ // 2
         aux3 = 2;
         escreveNoDisplay(aux3);
-        while(digitalRead(botao2)==HIGH){}
+        while(digitalRead(botao2) == HIGH){}
       }
-      if(digitalRead(botao3) == HIGH){
+      if(digitalRead(botao3) == HIGH){ // 3
         aux3 = 3;
         escreveNoDisplay(aux3);
-        while(digitalRead(botao3)==HIGH){}
+        while(digitalRead(botao3) == HIGH){}
+      }
+      if(digitalRead(botao4) == HIGH){ // 4
+        aux3 = 4;
+        escreveNoDisplay(aux3);
+        while(digitalRead(botao4) == HIGH){}
       }
     }
-    else if (a > 3) {
+    else if(a > 4) { // Depois da senha, se apertar o botão enter tranca o cofre
       if(digitalRead(botaoEnter) == HIGH){  
         lcd.clear(); 
         lcd.setCursor(0,0);
@@ -298,7 +324,7 @@ void loop() {
         lcd.setCursor(0,1);
         lcd.print("Cofre...");
         delay(1000);
-        for(pos = 90; pos >= 0; pos --) { 
+        for(pos = 90; pos>=0; pos--) { 
           servo_motor.write(pos);              
           delay(15);                       
         } 
