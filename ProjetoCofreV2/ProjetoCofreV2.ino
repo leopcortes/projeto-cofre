@@ -38,19 +38,19 @@ int a = 0, p = 0;
 void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no LCD
   if(aux == 1){
   lcd.print('1');
-  textoDigitadoPeloUsuario[a]='1';
+  textoDigitadoPeloUsuario[a] = '1';
   }
   if(aux == 2){
   lcd.print('2');
-  textoDigitadoPeloUsuario[a]='2';
+  textoDigitadoPeloUsuario[a] = '2';
   }
   if(aux == 3){
   lcd.print('3');
-  textoDigitadoPeloUsuario[a]='3';
+  textoDigitadoPeloUsuario[a] = '3';
   }
   if(aux == 4){
   lcd.print('4');
-  textoDigitadoPeloUsuario[a]='4';
+  textoDigitadoPeloUsuario[a] = '4';
   }
   a++;
   delay(15);
@@ -59,19 +59,19 @@ void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no
 void alteraSenha(int aux2) { // Função para alterar a senha
   if(aux2 == 1){
     lcd.print('1');
-    senha[p]='1';
+    senha[p] = '1';
   }
   if(aux2 == 2){
     lcd.print('2');
-    senha[p]='2';
+    senha[p] = '2';
   }
   if(aux2 == 3){
     lcd.print('3');
-    senha[p]='3';
+    senha[p] = '3';
   }
   if(aux2 == 4){
     lcd.print('4');
-    senha[p]='4';
+    senha[p] = '4';
   }
   p++;
   delay(15);
@@ -100,7 +100,6 @@ void senhaCorreta() { // Função para quando usuário acertar a senha
   lcd.setCursor(0,0);
   lcd.print("Senha Correta");
   delay(1000);  
-  
   for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
     servo_motor.write(pos);              
     delay(15);                       
@@ -279,14 +278,14 @@ void loop() {
               x = 4;
             if(tentativas == 2) { // Se for o 3° erro ativa o alarme
               alarme();
-              telaInicial(); 
+              telaInicial();
               tentativas = 0;
             }
             else { // Se for 1° ou 2° erro conta +1 tentativa
-              senhaIncorreta();  
+              senhaIncorreta();
             }
           }
-          if(x == 4) { // Se a senha for correta
+          if(x == 3) { // Se a senha for correta
             senhaCorreta();
             tentativas = 0;
           }
