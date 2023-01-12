@@ -7,12 +7,19 @@
  * 
  * @copyright Copyright (c) 2022
  */
+#define BLYNK_TEMPLATE_ID "TMPLJnyTTPsN"
+#define BLYNK_DEVICE_NAME "ESP8266"
+#define BLYNK_AUTH_TOKEN "q7w1oqI907tsBwEzBNhhjF2p1aBwgLLz"
+#define BLYNK_PRINT Serial // Definicao do monitoramento de conexao da placa pela serial
 
 // Bibliotecas
 #include "Arduino.h"
 #include <Servo.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <ESP8266_Lib.h>
+#include <BlynkSimpleShieldEsp8266.h>
+#include <SoftwareSerial.h>
 
 // Pinos dos dispositivos
 int servo = 2;
@@ -34,6 +41,30 @@ bool abrirCofre = false, alterarSenha = false;
 int pos = 0; 
 int tentativas = 0; 
 int a = 0, p = 0;
+
+// Declarações do módulo wifi
+char auth[] = BLYNK_AUTH_TOKEN; // Codigo de autenticacao para conexao
+char ssid[] = "Casa Flavio"; // UNB wireless - Declaracao do nome e senha da rede Wi-Fi
+char pass[] = "8008lpcl";
+SoftwareSerial EspSerial(10, 11); // Criacao do objeto serial para comunicacao com o ESP8266 - RX, TX
+const int ESP8266_BAUD = 9600; // Velocidade de comunicacao do modulo
+ESP8266 wifi(&EspSerial); // Confiracao do objeto 'wifi' para usar a serial do ESP8266 para conexao
+WidgetTerminal terminal(V0);
+
+BLYNK_WRITE(V0){
+  if(String("1234") == param.asStr()){
+    terminal.println("Senha correta!");
+  } else {
+    terminal.println("Senha incorreta.");
+    terminal.println("Tente novamente.");
+  }
+  terminal.flush();
+}
+
+BLYNK_WRITE(V1){ //Funcao que le o pino V1 a cada atualizacao de estado
+  int pinValue = param.asInt(); //Le o valor do pino virtual
+  digitalWrite(LED_BUILTIN, pinValue); //Aciona o LED da placa de acordo com o valor lido pelo pino virtual
+}
 
 void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no LCD
   if(aux == 1){
@@ -101,7 +132,7 @@ void senhaCorreta() { // Função para quando usuário acertar a senha
   lcd.print("Senha Correta");
   delay(1000);  
   for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
-    servo_motor.write(90);              
+    servo_motor.write(pos);              
     delay(15);                       
   }
   lcd.setCursor(0,1);
@@ -136,6 +167,7 @@ void alarme() { // Função para emitir o alarme no buzzer
 }
 
 void setup() { // Setup inicial
+  Serial.begin(9600); // Inicializacao do monitor serial
 
   lcd.init();
   lcd.backlight();
@@ -151,13 +183,22 @@ void setup() { // Setup inicial
   pinMode(botao3, INPUT);
   pinMode(botao4, INPUT);
   pinMode(botaoEnter, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT); // LED interno como saída
   
   // Inicializa o servo
   servo_motor.attach(servo);
   servo_motor.write(0);
+
+  EspSerial.begin(ESP8266_BAUD); //Inicializa a comunicacao serial do ESP8266
+  delay(10);
+  Blynk.begin(auth, wifi, ssid, pass); // Inicializacao da comunicacao e conexao do modulo ao aplicativo
+  
+  terminal.println(F("Digite a senha para abrir o cofre."));
+  terminal.flush();
 }
  
 void loop() {
+  Blynk.run(); //Mantem a conexao ativa com o aplicativo e processa comandos recebidos ou enviados
 
   if(abrirCofre == false && alterarSenha == false) { // Tela inicial, espera a escolha do usuário
     if(digitalRead(botao1) == HIGH){ // Se apertar 1, entra na operação de abrir o cofre
@@ -325,7 +366,7 @@ void loop() {
         lcd.setCursor(0,1);
         lcd.print("Cofre...");
         delay(1000);
-        for(pos = 90; pos>=0; pos--) { 
+        for(pos = 90; pos>=0; pos--) { // Volta o servo para 0º
           servo_motor.write(pos);              
           delay(15);                       
         } 
