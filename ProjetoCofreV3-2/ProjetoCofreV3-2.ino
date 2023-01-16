@@ -6,20 +6,20 @@
  * @date 2022-12-29
  * 
  * @copyright Copyright (c) 2022
- */
+ *//*
 #define BLYNK_TEMPLATE_ID "TMPLJnyTTPsN"
 #define BLYNK_DEVICE_NAME "ProjetoCofre"
 #define BLYNK_AUTH_TOKEN "q7w1oqI907tsBwEzBNhhjF2p1aBwgLLz"
 #define BLYNK_PRINT Serial // Definicao do monitoramento de conexao da placa pela serial
-
+*/
 // Bibliotecas
 #include "Arduino.h"
 #include <Servo.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <ESP8266_Lib.h>
+/*#include <ESP8266_Lib.h>
 #include <BlynkSimpleShieldEsp8266.h>
-#include <SoftwareSerial.h>
+#include <SoftwareSerial.h>*/
 
 // Pinos dos dispositivos
 const int servo = 2;
@@ -33,16 +33,16 @@ const int buzzer = 13;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo servo_motor;
 
-char senha[4] = "1234"; // Senha padrão
-char textoDigitadoPeloUsuario[4]; // Variavel que armazena a senha digitada pelo usuário
-
 // Variáveis auxiliares
-bool abrirCofre = false, alterarSenha = false;
+//bool abrirCofre = false, alterarSenha = false;
 //bool abrirCofreWifi = false, trocarSenhaWifi = false, controlarCelular = false;
 int pos = 0; 
 int tentativas = 0; 
 int a = 0, p = 0;
 
+char senha[4] = {'1','2','3','4'}; // Senha padrão
+char textoDigitadoPeloUsuario[4]; // Variavel que armazena a senha digitada pelo usuário
+/*
 // Declarações do módulo wifi
 char auth[] = BLYNK_AUTH_TOKEN; // Codigo de autenticacao para conexao
 char ssid[] = "Casa Flavio"; // UNB Wireless - Declaracao do nome e senha da rede Wi-Fi
@@ -53,51 +53,6 @@ ESP8266 wifi(&EspSerial); // Confiracao do objeto 'wifi' para usar a serial do E
 WidgetTerminal terminal(V0);
 
 BLYNK_WRITE(V0){
-  /*
-  if(abrirCofreWifi == false && trocarSenhaWifi == false){
-    if(String("abrir") == param.asStr()){
-      abrirCofre = true;
-    }
-    if(String("trancar") == param.asStr()){
-      trocarSenhaWifi = true; 
-    }
-  }
-
-  if(abrirCofreWifi == true){
-    terminal.println("Digite sua senha de 4 digitos:");
-    if(String("1234") == param.asStr()){
-      terminal.println("Senha correta!");
-      for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
-        servo_motor.write(pos);              
-        delay(15);                       
-      }
-      delay(100);
-      terminal.println("Digite 'trancar' para trancar o cofre.")
-      if(String("trancar") == param.asStr()){
-        for(pos=90; pos>=0; pos--) { 
-          servo_motor.write(pos);              
-          delay(15);                       
-        } 
-      } else {
-        terminal.println("Erro.");
-        terminal.println("Tente novamente.");
-      }
-    } else { 
-      terminal.println("Senha incorreta.");
-      terminal.println("Tente novamente.");
-    }
-  }
-
-  if(trocarSenhaWifi == true){
-    terminal.println("Digite sua senha atual.");
-    if(String("1234") == param.asStr()){
-      terminal.println("Senha correta!");
-      delay(100);
-      terminal.println("Digite sua nova senha.")
-    }
-  }
-  */
-
   if(String("1234") == param.asStr()){
     terminal.println("Senha correta!");
     for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
@@ -121,7 +76,7 @@ BLYNK_WRITE(V1){ //Funcao que le o pino V1 a cada atualizacao de estado
   int pinValue = param.asInt(); //Le o valor do pino virtual
   digitalWrite(LED_BUILTIN, pinValue); //Aciona o LED da placa de acordo com o valor lido pelo pino virtual
 }
-
+*/
 void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no LCD
   if(aux == 1){
   lcd.print('1');
@@ -186,7 +141,7 @@ void senhaIncorreta() { // Função para quando usuário errar a senha
 void senhaCorreta() { // Função para quando usuário acertar a senha
   lcd.setCursor(0,0);
   lcd.print("Senha Correta");
-  Blynk.logEvent("O cofre foi aberto.");
+  //Blynk.logEvent("O cofre foi aberto.");
   delay(1000);  
   for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
     servo_motor.write(pos);              
@@ -204,8 +159,8 @@ void telaInicial() { // Função para imprimir a tela inicial
   lcd.print("1- Abrir o cofre");
   lcd.setCursor(0,1);
   lcd.print("2- Alterar senha");
-  abrirCofre = false; 
-  alterarSenha = false;
+  //abrirCofre = false; 
+  //alterarSenha = false;
   a = 0;
   p = 0;  
 }
@@ -214,7 +169,7 @@ void alarme() { // Função para emitir o alarme no buzzer
   lcd.clear(); 
   lcd.setCursor(4,0);
   lcd.print("ALARME!!");
-  Blynk.logEvent("ALARME COFRE!!");
+  //Blynk.logEvent("ALARME COFRE!!");
   for (int vezesQueAlarmeToca=0; vezesQueAlarmeToca<10; vezesQueAlarmeToca++) { // Toca 10 vezes
     for(int freq = 500; freq<1000; freq++) {
       tone(buzzer, freq);
@@ -229,35 +184,32 @@ void alterarSenha() {
     if(digitalRead(botaoEnter) == HIGH) { 
       lcd.clear(); 
       
-      for(int x=0; x<4; x++){
-        if(senha[x] != textoDigitadoPeloUsuario[x]){
-          x = 4;
-          if(tentativas == 2) {
-            alarme();
-            telaInicial(); 
-            tentativas = 0;
-          }
-          else {
-            senhaIncorreta();  
-          }
-        }
-        if(x == 3) {
-          a++;
+      if(senha != textoDigitadoPeloUsuario){
+        if(tentativas == 2) {
+          alarme();
+          telaInicial(); 
           tentativas = 0;
-          lcd.setCursor(0,0);
-          lcd.print("Senha Correta");
-          delay(2500);
-          lcd.clear(); 
-          lcd.setCursor(0,0);
-          lcd.print("Digite a nova");
-          lcd.setCursor(0,1);
-          lcd.print("senha ...");
-          delay(2500);
-          lcd.clear(); 
-          lcd.setCursor(0,0);
-          lcd.print("Nova Senha:");
-          lcd.setCursor(6,1);             
         }
+        else {
+          senhaIncorreta();  
+        }
+      }
+      if(senha == textoDigitadoPeloUsuario) {
+        a++;
+        tentativas = 0;
+        lcd.setCursor(0,0);
+        lcd.print("Senha Correta");
+        delay(2500);
+        lcd.clear(); 
+        lcd.setCursor(0,0);
+        lcd.print("Digite a nova");
+        lcd.setCursor(0,1);
+        lcd.print("senha ...");
+        delay(2500);
+        lcd.clear(); 
+        lcd.setCursor(0,0);
+        lcd.print("Nova Senha:");
+        lcd.setCursor(6,1);             
       }
     }
   }
@@ -327,22 +279,19 @@ void abrirCofre() {
     if(digitalRead(botaoEnter) == HIGH) { // Se apertar enter
       lcd.clear(); 
       
-      for(int x=0; x<4; x++){ // Para cada digito
-        if(senha[x] != textoDigitadoPeloUsuario[x]){ // Compara o n° digitado pelo usuário com o caractere da senha
-            x = 4;
-          if(tentativas == 2) { // Se for o 3° erro ativa o alarme
-            alarme();
-            telaInicial();
-            tentativas = 0;
-          }
-          else { // Se for 1° ou 2° erro conta +1 tentativa
-            senhaIncorreta();
-          }
-        }
-        if(x == 3) { // Se a senha for correta
-          senhaCorreta();
+      if(senha != textoDigitadoPeloUsuario){ // Compara o n° digitado pelo usuário com o caractere da senha
+        if(tentativas == 2) { // Se for o 3° erro ativa o alarme
+          alarme();
+          telaInicial();
           tentativas = 0;
         }
+        else { // Se for 1° ou 2° erro conta +1 tentativa
+          senhaIncorreta();
+        }
+      }
+      if(senha == textoDigitadoPeloUsuario) { // Se a senha for correta
+        senhaCorreta();
+        tentativas = 0;
       }
     }
   }
@@ -392,12 +341,12 @@ void abrirCofre() {
 }
 
 void setup() { // Setup inicial
-  Serial.begin(9600); // Inicializacao do monitor serial
+  /*Serial.begin(9600); // Inicializacao do monitor serial
   delay(10);
   EspSerial.begin(ESP8266_BAUD); //Inicializa a comunicacao serial do ESP8266
   delay(10);
   Blynk.begin(auth, wifi, ssid, pass); // Inicializacao da comunicacao e conexao do modulo ao aplicativo
-
+*/
   lcd.init();
   lcd.backlight();
   lcd.clear();
@@ -412,20 +361,20 @@ void setup() { // Setup inicial
   pinMode(botao3, INPUT);
   pinMode(botao4, INPUT);
   pinMode(botaoEnter, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT); // LED interno como saída
+  //pinMode(LED_BUILTIN, OUTPUT); // LED interno como saída
   
   // Inicializa o servo
   servo_motor.attach(servo);
   servo_motor.write(0);
-
+/*
   delay(500);
   
   terminal.println(F("Digite a senha para abrir o cofre."));
-  terminal.flush();
+  terminal.flush();*/
 }
 
 void loop() {
-  Blynk.run(); //Mantem a conexao ativa com o aplicativo e processa comandos recebidos ou enviados
+  //Blynk.run(); //Mantem a conexao ativa com o aplicativo e processa comandos recebidos ou enviados
   
   if(digitalRead(botao1) == HIGH){ // Se apertar 1, entra na operação de abrir o cofre
     alterarSenha();

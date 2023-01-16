@@ -1,9 +1,9 @@
 /**
- * @file ProjetoCofre.ino
+ * @file ProjetoCofreV2.ino
  * @author Leonardo Pereira Côrtes (200030582)
  * @brief Projeto Transversal de Redes de Comunicação 1 - Universidade de Brasília
- * @version 3
- * @date 2022-12-29
+ * @version 2 - sem módulo wifi
+ * @date 2023-01-12
  * 
  * @copyright Copyright (c) 2022
  */
@@ -23,10 +23,10 @@ int botao2 = 6;
 int botao1 = 7;
 int buzzer = 13;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD com 2 linhas e 16 colunas
 Servo servo_motor;
 
-char senha[4] = "1234"; // Senha padrão
+char senha[4] = {'1','2','3','4'}; // Senha padrão
 char textoDigitadoPeloUsuario[4]; // Variavel que armazena a senha digitada pelo usuário
 
 // Variáveis auxiliares
@@ -36,7 +36,7 @@ int tentativas = 0;
 int a = 0, p = 0;
 
 void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no LCD
-  if(aux == 1){
+  if(aux == 1){ // Se digitar x imprime o numero no LCD e insere no array que guarda o texto digitado pelo usuario
   lcd.print('1');
   textoDigitadoPeloUsuario[a] = '1';
   }
@@ -52,12 +52,12 @@ void escreveNoDisplay(int aux) { // Função para imprimir o número digitado no
   lcd.print('4');
   textoDigitadoPeloUsuario[a] = '4';
   }
-  a++;
+  a++; // Soma 1 na contagem de numeros da senha ja digitados
   delay(15);
 }
 
 void alteraSenha(int aux2) { // Função para alterar a senha
-  if(aux2 == 1){
+  if(aux2 == 1){ // Se digitar x imprime o numero no LCD e insere no array que guarda o texto digitado pelo usuario
     lcd.print('1');
     senha[p] = '1';
   }
@@ -73,7 +73,7 @@ void alteraSenha(int aux2) { // Função para alterar a senha
     lcd.print('4');
     senha[p] = '4';
   }
-  p++;
+  p++; // Soma 1 na contagem de numeros da troca de senha ja digitados
   delay(15);
 }
 
@@ -93,7 +93,7 @@ void senhaIncorreta() { // Função para quando usuário errar a senha
   lcd.print("Tente novamente");
   delay(2000);
   resetaCofre();
-  tentativas++;
+  tentativas++; // Soma 1 nas tentativas
 }
 
 void senhaCorreta() { // Função para quando usuário acertar a senha
@@ -101,7 +101,7 @@ void senhaCorreta() { // Função para quando usuário acertar a senha
   lcd.print("Senha Correta");
   delay(1000);  
   for(pos=0; pos<=90; pos++) { // Mover o servo em 90°
-    servo_motor.write(90);              
+    servo_motor.write(pos);              
     delay(15);                       
   }
   lcd.setCursor(0,1);
@@ -126,17 +126,17 @@ void alarme() { // Função para emitir o alarme no buzzer
   lcd.clear(); 
   lcd.setCursor(4,0);
   lcd.print("ALARME!!");
-  for (int vezesQueAlarmeToca=0; vezesQueAlarmeToca<10; vezesQueAlarmeToca++) { // Toca 10 vezes
+  for (int vezesQueAlarmeToca=0; vezesQueAlarmeToca<10; vezesQueAlarmeToca++) { // Toca o alarme 10 vezes
     for(int freq = 500; freq<1000; freq++) {
       tone(buzzer, freq);
       delayMicroseconds(600);
     }
   }
-  noTone(buzzer);
+  noTone(buzzer); // Para o alarme
 }
 
 void setup() { // Setup inicial
-
+  // Texto inicial do LCD
   lcd.init();
   lcd.backlight();
   lcd.clear();
@@ -152,13 +152,12 @@ void setup() { // Setup inicial
   pinMode(botao4, INPUT);
   pinMode(botaoEnter, INPUT);
   
-  // Inicializa o servo
+  // Inicializa o servo fechado
   servo_motor.attach(servo);
   servo_motor.write(0);
 }
  
 void loop() {
-
   if(abrirCofre == false && alterarSenha == false) { // Tela inicial, espera a escolha do usuário
     if(digitalRead(botao1) == HIGH){ // Se apertar 1, entra na operação de abrir o cofre
       abrirCofre = true;
@@ -173,23 +172,23 @@ void loop() {
   }
 
   if(alterarSenha == true) { // Operação para trocar de senha
-    if(a == 4){ 
-      if(digitalRead(botaoEnter) == HIGH) { 
+    if(a == 4){ // Se usuário digitar os 4 caracters da senha
+      if(digitalRead(botaoEnter) == HIGH) { // Se apertar enter
         lcd.clear(); 
         
-        for(int x=0; x<4; x++){
-          if(senha[x] != textoDigitadoPeloUsuario[x]){
+        for(int x=0; x<4; x++){ // Para cada digito
+          if(senha[x] != textoDigitadoPeloUsuario[x]){ // Compara o n° digitado pelo usuário com o caractere da senha
             x = 4;
-            if(tentativas == 2) {
+            if(tentativas == 2) { // Se for o 3° erro ativa o alarme
               alarme();
               telaInicial(); 
               tentativas = 0;
             }
-            else {
+            else { // Se for 1° ou 2° erro conta +1 tentativa
               senhaIncorreta();  
             }
           }
-          if(x == 3) {
+          if(x == 3) { // Se a senha for correta esta pronto para mudar de senha
             a++;
             tentativas = 0;
             lcd.setCursor(0,0);
@@ -209,55 +208,55 @@ void loop() {
         }
       }
     }
-    else if(a < 4) {
+    else if(a < 4) { // Se não tiver digitado os 4 digitos ainda faz a leitura do próximo digito
       int aux = 0;
-      if(digitalRead(botao1) == HIGH){
+      if(digitalRead(botao1) == HIGH){ // 1
         aux = 1;
         escreveNoDisplay(aux);
         while(digitalRead(botao1) == HIGH){}
       }
-      if(digitalRead(botao2) == HIGH){
+      if(digitalRead(botao2) == HIGH){ // 2
         aux = 2;
         escreveNoDisplay(aux);
         while(digitalRead(botao2) == HIGH){}
       }
-      if(digitalRead(botao3) == HIGH){
+      if(digitalRead(botao3) == HIGH){ // 3
         aux = 3;
         escreveNoDisplay(aux);
         while(digitalRead(botao3) == HIGH){}
       }
-      if(digitalRead(botao4) == HIGH){
+      if(digitalRead(botao4) == HIGH){ // 4
         aux = 4;
         escreveNoDisplay(aux);
         while(digitalRead(botao4) == HIGH){}
       }
     }
-    else if(a > 4) {
-      if(p < 4){
+    else if(a > 4) { // Depois da senha, espera a nova senha
+      if(p < 4){ // Equanto nao tiver digitado os 4 numeros, faz a leitura
         int aux2 = 0;
-        if(digitalRead(botao1) == HIGH){
+        if(digitalRead(botao1) == HIGH){ // 1
           aux2 = 1;
           alteraSenha(aux2);
           while(digitalRead(botao1) == HIGH){}
         }
-        if(digitalRead(botao2) == HIGH){
+        if(digitalRead(botao2) == HIGH){ // 2
           aux2 = 2;
           alteraSenha(aux2);
           while(digitalRead(botao2) == HIGH){}
         }
-        if(digitalRead(botao3) == HIGH){
+        if(digitalRead(botao3) == HIGH){ // 3
           aux2 = 3;
           alteraSenha(aux2);
           while(digitalRead(botao3) == HIGH){}
         }
-        if(digitalRead(botao4) == HIGH){
+        if(digitalRead(botao4) == HIGH){ // 4
           aux2 = 4;
           alteraSenha(aux2);
           while(digitalRead(botao4) == HIGH){}
         }
       }
-      if(p == 4){ 
-        if (digitalRead(botaoEnter) == HIGH) { 
+      if(p == 4){ // Se usuário digitar os 4 caracteres
+        if(digitalRead(botaoEnter) == HIGH) { // Se apertar enter confirma a troca de senha
           lcd.clear(); 
           lcd.setCursor(0,0);
           lcd.print("Senha alterada");
@@ -287,7 +286,7 @@ void loop() {
               senhaIncorreta();
             }
           }
-          if(x == 3) { // Se a senha for correta
+          if(x == 3) { // Se a senha for correta abre o cofre
             senhaCorreta();
             tentativas = 0;
           }
